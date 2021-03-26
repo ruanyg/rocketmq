@@ -16,12 +16,13 @@
  */
 package org.apache.rocketmq.client.consumer.rebalance;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.rocketmq.client.consumer.AllocateMessageQueueStrategy;
 import org.apache.rocketmq.client.log.ClientLogger;
-import org.apache.rocketmq.logging.InternalLogger;
 import org.apache.rocketmq.common.message.MessageQueue;
+import org.apache.rocketmq.logging.InternalLogger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Average Hashing queue algorithm
@@ -52,7 +53,14 @@ public class AllocateMessageQueueAveragely implements AllocateMessageQueueStrate
         }
 
         int index = cidAll.indexOf(currentCID);
+        // mqAll对cidAll大小取模
         int mod = mqAll.size() % cidAll.size();
+        /*计算每个消费者应该分配到的mq数量
+        如果队列个数小于等于消费者个数，每个消费者最多分配一个队列
+        如果队列个数大于消费者个数，看mod和index大小
+            1. 如果余数大于0并且当前消费者下标小于余数，则当前消费者应该消费平均数个队列+1
+            2. 如果余数大于0并且当前消费者下标大于等于余数，则当前消费者应该消费平均数个队列
+        */
         int averageSize =
             mqAll.size() <= cidAll.size() ? 1 : (mod > 0 && index < mod ? mqAll.size() / cidAll.size()
                 + 1 : mqAll.size() / cidAll.size());

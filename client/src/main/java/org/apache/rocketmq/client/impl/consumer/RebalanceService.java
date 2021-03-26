@@ -22,6 +22,7 @@ import org.apache.rocketmq.common.ServiceThread;
 import org.apache.rocketmq.logging.InternalLogger;
 
 public class RebalanceService extends ServiceThread {
+    // 周期性触发rebalance时间间隔，默认20秒
     private static long waitInterval =
         Long.parseLong(System.getProperty(
             "rocketmq.client.rebalance.waitInterval", "20000"));
@@ -36,8 +37,11 @@ public class RebalanceService extends ServiceThread {
     public void run() {
         log.info(this.getServiceName() + " service started");
 
+        // 在消费者没有停止的情况下，通过死循环等待间隔时间，触发rebalance
         while (!this.isStopped()) {
+            // 等待间隔时间，如果被唤醒，则无需等待直接触发
             this.waitForRunning(waitInterval);
+            // 触发rebalance
             this.mqClientFactory.doRebalance();
         }
 
